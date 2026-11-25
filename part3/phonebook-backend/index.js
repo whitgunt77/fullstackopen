@@ -1,7 +1,16 @@
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
 
 app.use(express.json());
+
+morgan.token("body", (request) => {
+  return request.method === "POST" ? JSON.stringify(request.body) : "";
+});
+
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms :body"),
+);
 
 let persons = [
   {
@@ -26,12 +35,10 @@ let persons = [
   },
 ];
 
-// 3.1: return all persons
 app.get("/api/persons", (request, response) => {
   response.json(persons);
 });
 
-// 3.2: info page
 app.get("/info", (request, response) => {
   const time = new Date();
   response.send(`
@@ -40,7 +47,6 @@ app.get("/info", (request, response) => {
   `);
 });
 
-// 3.3: single person
 app.get("/api/persons/:id", (request, response) => {
   const id = request.params.id;
   const person = persons.find((p) => p.id === id);
@@ -52,7 +58,6 @@ app.get("/api/persons/:id", (request, response) => {
   }
 });
 
-// 3.4: delete a person
 app.delete("/api/persons/:id", (request, response) => {
   const id = request.params.id;
   persons = persons.filter((p) => p.id !== id);
@@ -60,12 +65,10 @@ app.delete("/api/persons/:id", (request, response) => {
   response.status(204).end();
 });
 
-// 3.5: helper for new ids
 const generateId = () => {
   return String(Math.floor(Math.random() * 1000000000));
 };
 
-// 3.5 and 3.6: add a person with validation
 app.post("/api/persons", (request, response) => {
   const body = request.body;
 
